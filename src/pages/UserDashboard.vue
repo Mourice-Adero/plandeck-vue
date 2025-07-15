@@ -7,7 +7,7 @@ import TodaysSchedule from '@/components/TodaysSchedule.vue'
 <template>
   <div class="bg-gray-100 h-screen">
     <DashboardNav />
-    <div class="grid grid-cols-4">
+    <div class="grid md:grid-cols-4 gap-5 p-8">
       <div class="col-span-1">
         <TodaysSchedule />
       </div>
