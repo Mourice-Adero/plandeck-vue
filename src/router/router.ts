@@ -1,8 +1,9 @@
 import { createWebHistory, createRouter } from 'vue-router'
 import Login from '../pages/LoginPage.vue'
 import Tasks from '../pages/TasksPage.vue'
-import UserDashboard from '../pages/UserDashboard.vue'
+import Dashboard from '../pages/UserDashboard.vue'
 import DashboardLayout from '@/pages/DashboardLayout.vue'
+import UserProfile from '@/components/UserProfile.vue'
 
 const routes = [
   { path: '/login', component: Login },
@@ -10,8 +11,9 @@ const routes = [
     path: '/',
     component: DashboardLayout,
     children: [
-      { path: '', component: UserDashboard },
+      { path: '', component: Dashboard },
       { path: '/tasks', component: Tasks },
+      { path: '/profile', component: UserProfile },
     ],
   },
 ]
