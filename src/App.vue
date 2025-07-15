@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
+// import DashboadLayout from './pages/DashboardLayout.vue'
 </script>
 
 <template>
