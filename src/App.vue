@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import LoginPage from './pages/LoginPage.vue'
-import UserDashboard from './pages/UserDashboard.vue'
+import { RouterView } from 'vue-router'
 </script>
 
 <template>
-  <!-- <LoginPage /> -->
-  <UserDashboard />
+  <RouterView />
 </template>
