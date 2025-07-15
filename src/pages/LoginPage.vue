@@ -4,7 +4,7 @@ const username = ref('')
 const password = ref('')
 </script>
 <template>
-  <div class="flex justify-center items-center h-lvh">
+  <div class="flex justify-center items-center h-screen">
     <form class="flex flex-col gap-10 shadow shadow-blue-950 py-20 px-10 w-3/4 md:w-2/5">
       <input
         v-model="username"
