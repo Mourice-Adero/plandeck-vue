@@ -91,8 +91,20 @@ const removeSubtask = (index: number) => {
 }
 
 const toggleSubtask = (taskIndex: number, subtaskIndex: number) => {
-  tasks.value[taskIndex].subtasks[subtaskIndex].completed =
-    !tasks.value[taskIndex].subtasks[subtaskIndex].completed
+  const originalTaskIndex = tasks.value.findIndex((t) => t.title === tasks.value[taskIndex].title)
+
+  tasks.value[originalTaskIndex].subtasks[subtaskIndex].completed =
+    !tasks.value[originalTaskIndex].subtasks[subtaskIndex].completed
+
+  const allSubtasksCompleted = tasks.value[originalTaskIndex].subtasks.every(
+    (subtask) => subtask.completed,
+  )
+
+  if (allSubtasksCompleted) {
+    tasks.value[originalTaskIndex].completed = true
+  } else {
+    tasks.value[originalTaskIndex].completed = false
+  }
 }
 const formatDayName = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', { weekday: 'long' })
@@ -115,7 +127,10 @@ const formatDayName = (dateString: string) => {
             </p>
           </div>
           <div class="flex-3 ml-4">
-            <h4 class="font-medium">{{ task.title }}</h4>
+            <h4 class="font-medium">
+              {{ task.title }}
+              <span class="text-gray-200">{{ task.completed ? ' ✔️' : ' ✖️' }}</span>
+            </h4>
             <p class="text-sm text-gray-600">{{ task.description }}</p>
             <p class="text-xs mt-1">
               <span class="px-2 py-1 bg-gray-100 rounded-full">{{ task.category }}</span>
