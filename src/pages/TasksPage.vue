@@ -1,4 +1,8 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import AllTasks from '@/components/AllTasks.vue'
+</script>
 <template>
-  <p>Tasks</p>
+  <div>
+    <AllTasks />
+  </div>
 </template>
