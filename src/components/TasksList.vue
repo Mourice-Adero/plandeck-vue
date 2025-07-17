@@ -7,6 +7,16 @@ const tasks = ref<Task[]>(initialTasks)
 
 const toggleTask = (taskIndex: number) => {
   tasks.value[taskIndex].completed = !tasks.value[taskIndex].completed
+  const completedTask = tasks.value[taskIndex]
+  if (completedTask.completed) {
+    completedTask.subtasks.forEach((subtask) => {
+      subtask.completed = true
+    })
+  } else {
+    completedTask.subtasks.forEach((subtask) => {
+      subtask.completed = false
+    })
+  }
 }
 </script>
 <template>

@@ -9,14 +9,28 @@ const getTodayDate = () => {
   return today.toISOString().split('T')[0]
 }
 
-const todayTask = computed(() => {
+const todayTask = computed<Task[]>(() => {
   const today = getTodayDate()
   return tasks.value.filter((task) => task.date === today)
 })
 
 const toggleSubtask = (taskIndex: number, subtaskIndex: number) => {
-  tasks.value[taskIndex].subtasks[subtaskIndex].completed =
-    !tasks.value[taskIndex].subtasks[subtaskIndex].completed
+  const originalTaskIndex = tasks.value.findIndex(
+    (t) => t.title === todayTask.value[taskIndex].title,
+  )
+
+  tasks.value[originalTaskIndex].subtasks[subtaskIndex].completed =
+    !tasks.value[originalTaskIndex].subtasks[subtaskIndex].completed
+
+  const allSubtasksCompleted = tasks.value[originalTaskIndex].subtasks.every(
+    (subtask) => subtask.completed,
+  )
+
+  if (allSubtasksCompleted) {
+    tasks.value[originalTaskIndex].completed = true
+  } else {
+    tasks.value[originalTaskIndex].completed = false
+  }
 }
 </script>
 <template>
@@ -30,7 +44,9 @@ const toggleSubtask = (taskIndex: number, subtaskIndex: number) => {
           <p class="px-2 py-1 bg-gray-100 rounded-full w-fit">{{ task.category }}</p>
           <div class="flex gap-3 my-2 w-full">
             <p class="text-sm text-gray-600 flex-1">{{ task.description }}</p>
-            <p class="px-2 py-1 bg-gray-100 rounded-full">{{ task.time }}</p>
+            <p class="px-2 py-1 bg-gray-100 rounded-full">
+              {{ task.completed ? 'Done' : task.time }}
+            </p>
           </div>
           <ul v-for="(subtask, subtaskIndex) in task.subtasks" :key="subtaskIndex" class="p-1">
             <li>
