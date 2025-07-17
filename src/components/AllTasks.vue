@@ -1,7 +1,19 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-const tasks = ref([
+interface Subtask {
+  title: string
+  completed: boolean
+}
+interface Task {
+  title: string
+  description: string
+  category: string
+  date: string
+  time: string
+  subtasks: Subtask[]
+}
+const tasks = ref<Task[]>([
   {
     title: 'Complete Project Proposal',
     description: 'Draft and submit the client project proposal by EOD.',
@@ -49,103 +61,273 @@ const tasks = ref([
     ],
   },
 ])
-const title = ref('')
-const description = ref('')
-const category = ref('')
-const date = ref('')
-const time = ref('')
-const subtask = ref('')
+
+const form = ref({
+  title: '',
+  description: '',
+  category: '',
+  date: '',
+  time: '',
+  subtask: '',
+  subtasks: [] as Subtask[],
+})
+
+const editingIndex = ref<number | null>(null)
+const isEditing = ref(false)
+
+const editTask = (index: number) => {
+  const task = tasks.value[index]
+  form.value = {
+    title: task.title,
+    description: task.description,
+    category: task.category,
+    date: task.date,
+    time: task.time,
+    subtask: '',
+    subtasks: [...task.subtasks],
+  }
+  editingIndex.value = index
+  isEditing.value = true
+}
+const deleteTask = (index: number) => {
+  tasks.value.splice(index, 1)
+}
+const addTask = () => {
+  if (!form.value.title) return
+  const newTask: Task = {
+    title: form.value.title,
+    description: form.value.description,
+    category: form.value.category,
+    date: form.value.date,
+    time: form.value.time,
+    subtasks: [...form.value.subtasks],
+  }
+  tasks.value.push(newTask)
+  resetForm()
+}
+
+const updateTask = () => {
+  if (editingIndex.value === null || !form.value.title) return
+
+  tasks.value[editingIndex.value] = {
+    title: form.value.title,
+    description: form.value.description,
+    category: form.value.category,
+    date: form.value.date,
+    time: form.value.time,
+    subtasks: [...form.value.subtasks],
+  }
+
+  resetForm()
+}
+
+const resetForm = () => {
+  form.value = {
+    title: '',
+    description: '',
+    category: '',
+    date: '',
+    time: '',
+    subtask: '',
+    subtasks: [],
+  }
+  editingIndex.value = null
+  isEditing.value = false
+}
+const addSubtask = () => {
+  if (!form.value.subtask) return
+  form.value.subtasks.push({
+    title: form.value.subtask,
+    completed: false,
+  })
+  form.value.subtask = ''
+}
+const removeSubtask = (index: number) => {
+  form.value.subtasks.splice(index, 1)
+}
+
+const toggleSubtask = (taskIndex: number, subtaskIndex: number) => {
+  tasks.value[taskIndex].subtasks[subtaskIndex].completed =
+    !tasks.value[taskIndex].subtasks[subtaskIndex].completed
+}
+const formatDayName = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-US', { weekday: 'long' })
+}
 </script>
 <template>
   <div class="grid md:grid-cols-3 p-10 gap-5">
     <div class="md:col-span-2 bg-white p-5 shadow shadow-gray-100">
       <h2 class="font-bold border-b border-b-gray-400 p-2">My Tasks</h2>
-      <ul class="p-5">
+      <ul class="p-5 space-y-4">
         <li
           v-for="(task, index) in tasks"
           :key="index"
-          class="flex w-full shadow shadow-gray-200 p-2"
+          class="flex w-full shadow shadow-gray-200 p-4 rounded-lg hover:shadow-gray-300 transition-shadow"
         >
           <div class="flex-1">
-            {{ task.time }}
-            <p class="">
-              {{ new Date(task.date).toLocaleDateString('en-US', { weekday: 'long' }) }}
+            <p class="text-gray-500">{{ task.time }}</p>
+            <p class="font-medium">
+              {{ formatDayName(task.date) }}
             </p>
           </div>
-          <div class="flex-3">
-            <h4>{{ task.title }}</h4>
-            <p>{{ task.category }}</p>
+          <div class="flex-3 ml-4">
+            <h4 class="font-medium">{{ task.title }}</h4>
+            <p class="text-sm text-gray-600">{{ task.description }}</p>
+            <p class="text-xs mt-1">
+              <span class="px-2 py-1 bg-gray-100 rounded-full">{{ task.category }}</span>
+            </p>
+            <ul class="mt-2 space-y-1">
+              <li
+                v-for="(subtask, subtaskIndex) in task.subtasks"
+                :key="subtaskIndex"
+                class="flex items-center text-sm"
+              >
+                <input
+                  type="checkbox"
+                  :checked="subtask.completed"
+                  @change="toggleSubtask(index, subtaskIndex)"
+                  class="mr-2"
+                />
+                <span :class="{ 'line-through text-gray-400': subtask.completed }">{{
+                  subtask.title
+                }}</span>
+              </li>
+            </ul>
           </div>
-          <div class="flex-1">
-            <button>Edit</button>
-            <button>Delete</button>
+          <div class="flex-1 space-x-2">
+            <button
+              class="px-2 py-1 bg-gray-300 text-blue-600 hover:bg-gray-400 rounded"
+              @click="editTask(index)"
+            >
+              Edit
+            </button>
+            <button
+              class="px-2 py-1 bg-red-100 text-blue hover:bg-red-200 rounded"
+              @click="deleteTask(index)"
+            >
+              Delete
+            </button>
           </div>
         </li>
       </ul>
     </div>
-    <div class="md:col-span-1 bg-white p-5 shadow shadow-gray-100">
-      <h2 class="text-center p-2 border-b border-b-gray-400 font-bold">Add Task</h2>
-      <form class="flex flex-col gap-3">
-        <label for="title"> Title </label>
-        <input
-          class="border rounded border-gray-400 bg-gray-100 p-1"
-          placeholder=""
-          id="title"
-          type="text"
-          v-model="title"
-        />
-        <label for="description"> Description </label>
-        <input
-          class="border rounded border-gray-400 bg-gray-100 p-1"
-          placeholder=""
-          id="description"
-          type="text"
-          v-model="description"
-        />
-        <label for="category"> Category </label>
-        <select
-          class="border rounded border-gray-400 bg-gray-100 p-1"
-          placeholder=""
-          id="category"
-          type="text"
-          v-model="category"
-        >
-          <option value="">Select Category</option>
-          <option value="">Work</option>
-          <option value="">Health</option>
-          <option value="">Personal</option>
-          <option value="">Gym</option>
-        </select>
-        <div class="w-full">
-          <label for="date"> Date: </label>
+    <div class="md:col-span-1 bg-white p-5 shadow shadow-gray-100 rounded-lg">
+      <h2 class="text-center p-2 border-b border-b-gray-400 font-bold">
+        {{ isEditing ? 'Edit Task' : 'Add Task' }}
+      </h2>
+      <form class="flex flex-col gap-3 mt-4" @submit.prevent="isEditing ? updateTask() : addTask()">
+        <div>
+          <label for="title"> Title </label>
           <input
-            class="border rounded border-gray-400 bg-gray-100 p-1 w-1/2"
+            class="border rounded border-gray-300 w-full p-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder=""
-            id="date"
-            type="date"
-            v-model="date"
-          />
-          <label for="time"> Time: </label>
-          <input
-            class="border rounded border-gray-400 bg-gray-100 p-1"
-            placeholder=""
-            id="time"
-            type="time"
-            v-model="time"
+            id="title"
+            type="text"
+            v-model="form.title"
           />
         </div>
-        <input
-          class="border rounded border-gray-400 bg-gray-100 p-1"
-          id=""
-          type="text"
-          placeholder="Add Subtask"
-          v-model="subtask"
-        />
-        <button
-          class="p-1 w-1/2 self-center text-white border border-gray-500 rounded-xl bg-sky-700"
-        >
-          Save
-        </button>
+        <div>
+          <label for="description" class="block text-sm font-medium text-gray-700">
+            Description
+          </label>
+          <textarea
+            class="border rounded border-gray-300 w-full p-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder=""
+            id="description"
+            type="text"
+            v-model="form.description"
+          ></textarea>
+        </div>
+        <div>
+          <label for="category" class="block text-sm font-medium text-gray-700"> Category </label>
+          <select
+            class="border rounded border-gray-300 w-full p-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder=""
+            id="category"
+            type="text"
+            v-model="form.category"
+          >
+            <option value="">Select Category</option>
+            <option value="Work">Work</option>
+            <option value="Health">Health</option>
+            <option value="Personal">Personal</option>
+            <option value="Learning">Learning</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="date" class="block text-sm font-medium text-gray-700"> Date: </label>
+            <input
+              class="border rounded border-gray-300 w-full p-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder=""
+              id="date"
+              type="date"
+              v-model="form.date"
+            />
+          </div>
+          <div>
+            <label for="time" class="block text-sm font-medium text-gray-700"> Time: </label>
+            <input
+              class="border rounded border-gray-300 w-full p-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder=""
+              id="time"
+              type="time"
+              v-model="form.time"
+            />
+          </div>
+        </div>
+        <div>
+          <label for="subtask" class="block text-sm font-medium text-gray-700">Subtask</label>
+          <div class="flex">
+            <input
+              class="border rounded border-gray-300 w-full p-2 mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              id="subtask"
+              type="text"
+              placeholder="Add Subtask"
+              v-model="form.subtask"
+            />
+            <button
+              @click.prevent="addSubtask"
+              type="button"
+              class="px-3 bg-blue-500 text-white rounded-r hover:bg-blue-600"
+            >
+              Add
+            </button>
+          </div>
+
+          <ul v-if="form.subtasks.length">
+            <li
+              v-for="(subtask, index) in form.subtasks"
+              :key="index"
+              class="flex items-center justify-between p-2 bg-gray-50 rounded"
+            >
+              <span>{{ subtask.title }}</span>
+              <button
+                @click.prevent="removeSubtask(index)"
+                type="button"
+                class="text-red-500 hover:text-red-700"
+              >
+                X
+              </button>
+            </li>
+          </ul>
+        </div>
+        <div class="flex space-x-3 mt-4">
+          <button
+            type="submit"
+            class="flex-1 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {{ isEditing ? 'Update Task' : 'Add Task' }}
+          </button>
+          <button
+            v-if="isEditing"
+            @click="resetForm"
+            type="button"
+            class="py-2 px-4 border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+        </div>
       </form>
     </div>
   </div>
