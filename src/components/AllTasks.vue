@@ -43,6 +43,7 @@ const addTask = () => {
     date: form.value.date,
     time: form.value.time,
     subtasks: [...form.value.subtasks],
+    completed: false,
   }
   tasks.value.push(newTask)
   resetForm()
@@ -58,6 +59,7 @@ const updateTask = () => {
     date: form.value.date,
     time: form.value.time,
     subtasks: [...form.value.subtasks],
+    completed: false,
   }
 
   resetForm()
