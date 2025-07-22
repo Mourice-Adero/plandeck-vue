@@ -1,9 +1,24 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { Task, Subtask } from '../utils/tasksData'
-import { tasks as initialTasks } from '../utils/tasksData'
+// import { tasks as initialTasks } from '../utils/tasksData'
+import axios from 'axios'
 
-const tasks = ref<Task[]>(initialTasks)
+const tasks = ref<Task[]>([])
+
+const API_URL = 'http://localhost:5000/api'
+const loadTask = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/tasks?userId=687e03499615eae999d33b77`)
+    const data = response.data
+    tasks.value = data
+  } catch (error) {
+    console.error('Error fetching user data:', error)
+    throw error
+  }
+}
+loadTask()
+
 const form = ref({
   title: '',
   description: '',
@@ -31,12 +46,20 @@ const editTask = (index: number) => {
   editingIndex.value = index
   isEditing.value = true
 }
-const deleteTask = (index: number) => {
-  tasks.value.splice(index, 1)
+const deleteTask = async (index: number) => {
+  const task = tasks.value[index]
+  try {
+    await axios.delete(`${API_URL}/tasks/${task._id}`, {
+      data: { userId: '687e03499615eae999d33b77' },
+    })
+    await loadTask()
+  } catch (error) {
+    console.error('Error deleting task:', error)
+  }
 }
-const addTask = () => {
+const addTask = async () => {
   if (!form.value.title) return
-  const newTask: Task = {
+  const newTask = {
     title: form.value.title,
     description: form.value.description,
     category: form.value.category,
@@ -44,15 +67,21 @@ const addTask = () => {
     time: form.value.time,
     subtasks: [...form.value.subtasks],
     completed: false,
+    userId: '687e03499615eae999d33b77',
   }
-  tasks.value.push(newTask)
-  resetForm()
+  try {
+    await axios.post(`${API_URL}/tasks/`, newTask)
+    await loadTask()
+    resetForm()
+  } catch (error) {
+    console.error('Error adding task:', error)
+  }
 }
 
-const updateTask = () => {
+const updateTask = async () => {
   if (editingIndex.value === null || !form.value.title) return
-
-  tasks.value[editingIndex.value] = {
+  const task = tasks.value[editingIndex.value]
+  const updatedTask = {
     title: form.value.title,
     description: form.value.description,
     category: form.value.category,
@@ -61,8 +90,13 @@ const updateTask = () => {
     subtasks: [...form.value.subtasks],
     completed: false,
   }
-
-  resetForm()
+  try {
+    await axios.put(`${API_URL}/tasks/${task._id}`, updatedTask)
+    await loadTask()
+    resetForm()
+  } catch (error) {
+    console.error('Error updating task:', error)
+  }
 }
 
 const resetForm = () => {
@@ -90,22 +124,24 @@ const removeSubtask = (index: number) => {
   form.value.subtasks.splice(index, 1)
 }
 
-const toggleSubtask = (taskIndex: number, subtaskIndex: number) => {
-  const originalTaskIndex = tasks.value.findIndex((t) => t.title === tasks.value[taskIndex].title)
-
-  tasks.value[originalTaskIndex].subtasks[subtaskIndex].completed =
-    !tasks.value[originalTaskIndex].subtasks[subtaskIndex].completed
-
-  const allSubtasksCompleted = tasks.value[originalTaskIndex].subtasks.every(
-    (subtask) => subtask.completed,
-  )
-
-  if (allSubtasksCompleted) {
-    tasks.value[originalTaskIndex].completed = true
-  } else {
-    tasks.value[originalTaskIndex].completed = false
+const toggleSubtask = async (taskIndex: number, subtaskIndex: number) => {
+  const task = tasks.value[taskIndex]
+  const subtasks = [...task.subtasks]
+  subtasks[subtaskIndex].completed = !subtasks[subtaskIndex].completed
+  const allSubtasksCompleted = subtasks.every((subtask) => subtask.completed)
+  const updatedTask = {
+    ...task,
+    subtasks,
+    completed: allSubtasksCompleted,
+  }
+  try {
+    await axios.put(`${API_URL}/tasks/${task._id}`, updatedTask)
+    await loadTask()
+  } catch (error) {
+    console.error('Error updating subtask:', error)
   }
 }
+
 const formatDayName = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', { weekday: 'long' })
 }

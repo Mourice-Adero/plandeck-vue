@@ -3,6 +3,7 @@ export interface Subtask {
   completed: boolean
 }
 export interface Task {
+  _id: string
   title: string
   description: string
   category: string
